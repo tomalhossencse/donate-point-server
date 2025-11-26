@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 require("dotenv").config();
 const cors = require("cors");
@@ -27,6 +27,7 @@ async function run() {
 
     const db = client.db("DonerPointDB");
     const donerCollection = db.collection("doners");
+    const howItworksCollection = db.collection("howItWorks");
 
     // api
 
@@ -35,9 +36,58 @@ async function run() {
       const result = await donerCollection.insertOne(doner);
       res.send(result);
     });
+
+    // single doner by id
+
+    app.get("/doners/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await donerCollection.findOne(query);
+      res.send(result);
+    });
+
+    // delete doner api
+
+    app.delete("/doners/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await donerCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // get doners
+
     app.get("/doners", async (req, res) => {
-      const doner = req.body;
-      const result = await donerCollection.find(doner).toArray();
+      const contributorEmail = req.query.contributerEmail;
+      let query = {};
+      if (contributorEmail) {
+        query = { contributerEmail: contributorEmail };
+      }
+      try {
+        const result = await donerCollection
+          .find(query)
+          .sort({ createAt: -1 })
+          .toArray();
+        res.send(result);
+      } catch (error) {
+        console.error("Error fetching doners:", error);
+        res.status(500).send({ message: "Failed to fetch donor data." });
+      }
+    });
+    // get latest doner
+    app.get("/latest-doners", async (req, res) => {
+      const result = await donerCollection
+        .find()
+        .sort({ createAt: -1 })
+        .limit(3)
+        .toArray();
+      res.send(result);
+    });
+
+    // howItworks api
+
+    app.get("/howItworks", async (req, res) => {
+      const result = await howItworksCollection.find().toArray();
       res.send(result);
     });
 
