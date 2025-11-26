@@ -28,6 +28,7 @@ async function run() {
     const db = client.db("DonerPointDB");
     const donerCollection = db.collection("doners");
     const howItworksCollection = db.collection("howItWorks");
+    const bloodBanksCollection = db.collection("BloodBanks");
 
     // api
 
@@ -88,6 +89,13 @@ async function run() {
 
     app.get("/howItworks", async (req, res) => {
       const result = await howItworksCollection.find().toArray();
+      res.send(result);
+    });
+
+    // bloodbank api
+
+    app.get("/bloodBanks", async (req, res) => {
+      const result = await bloodBanksCollection.find().toArray();
       res.send(result);
     });
 
